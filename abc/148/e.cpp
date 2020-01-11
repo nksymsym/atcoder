@@ -23,30 +23,11 @@ int main()
     }
     else
     {
-        vll cnt(100, 0);
-        vll cycle(100, 0);
-
-        ll i = 1;
-        ll tmpCycle = 10;
-        while (tmpCycle <= n)
+        n /= 2;
+        while (n >= 5)
         {
-            cnt[i] = cnt[i - 1] * 5 + 1;
-            cycle[i] = tmpCycle;
-            //cout << "debug(1):" << i << "," << cnt[i] << "," << cycle[i] << endl;
-            i++;
-            tmpCycle *= 5;
-        }
-
-        i--;
-        while (i > 0)
-        {
-            while (cycle[i] <= n)
-            {
-                //cout << "debug(2):" << i << "," << n << "," << cycle[i] << endl;
-                ans += cnt[i];
-                n -= cycle[i];
-            }
-            i--;
+            ans += n / 5;
+            n /= 5;
         }
     }
 
