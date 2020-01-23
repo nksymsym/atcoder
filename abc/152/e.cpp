@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <stack>
 #include <queue>
+#include <set>
 using namespace std;
 typedef vector<int> vi;
 typedef vector<vector<int>> vvi;
@@ -12,18 +13,6 @@ typedef vector<ll> vll;
 typedef vector<vector<ll>> vvll;
 
 ll mod = 1e9 + 7;
-
-bool isPrime(ll n)
-{
-    for (int i = 3; i * i <= n; i += 2)
-    {
-        if (n % i == 0)
-        {
-            return false;
-        }
-    }
-    return true;
-}
 
 ll pow_mod(ll n, ll p)
 {
@@ -48,66 +37,94 @@ ll pow_mod(ll n, ll p)
     return ret;
 }
 
+ll div_mod(ll n, ll d)
+{
+    return (n * pow_mod(d, mod - 2)) % mod;
+}
+
 int main()
 {
     ll n;
     cin >> n;
     vll a(n);
-    ll mx = 0;
+    ll a_max = 0;
     for (ll i = 0; i < n; i++)
     {
         cin >> a[i];
-        mx = max(mx, a[i]);
+        a_max = max(a_max, a[i]);
     }
 
-    vll p(1e5);
-    int cnt = 0;
-    p[cnt] = 2;
-    for (ll i = 3; i <= mx; i += 2)
+    vll fc(a_max + 1, 0);
+    for (ll i = 2; i <= a_max; i++)
     {
-        if (isPrime(i))
+        if (fc[i] != 0)
         {
-            cnt++;
-            p[cnt] = i;
+            continue;
+        }
+        for (ll j = i; j <= a_max; j += i)
+        {
+            if (fc[j] == 0)
+            {
+                fc[j] = i;
+            }
         }
     }
 
-    ll sum = 1;
-    vll pcnt(cnt + 1, 0);
-    for (ll ai = 0; ai < n; ai++)
+    vll lcm_pf(a_max + 1, 0);
+    set<ll> primes;
+    for (ll i = 0; i < n; i++)
     {
-        vll aipcnt(cnt + 1, 0);
-        ll add = 1;
-        for (int pi = 0; pi <= cnt; pi++)
+        ll num = a[i];
+        ll prime = fc[num];
+        ll prime_cnt = 0;
+        ll prev_prime = 0;
+        while (num > 1)
         {
-            while (a[ai] % p[pi] == 0)
+            prime_cnt++;
+            num /= prime;
+            prev_prime = prime;
+            prime = fc[num];
+            if (prev_prime != prime)
             {
-                aipcnt[pi]++;
-                a[ai] /= p[pi];
+                lcm_pf[prev_prime] = max(lcm_pf[prev_prime], prime_cnt);
+                primes.insert(prev_prime);
+                prime_cnt = 0;
             }
-            if (pcnt[pi] < aipcnt[pi])
-            {
-                sum *= pow_mod(p[pi], aipcnt[pi] - pcnt[pi]);
-                sum %= mod;
-                pcnt[pi] = aipcnt[pi];
-            }
-            else if (aipcnt[pi] < pcnt[pi])
-            {
-                add *= pow_mod(p[pi], pcnt[pi] - aipcnt[pi]);
-                add %= mod;
-            }
-        }
-
-        sum += add;
-        sum %= mod;
-
-        if (ai == 0)
-        {
-            sum = 1;
         }
     }
 
-    cout << sum << endl;
+    ll lcm_mod = 1;
+    for (auto itr = primes.begin(); itr != primes.end(); itr = next(itr))
+    {
+        ll prime = *itr;
+        lcm_mod *= pow_mod(prime, lcm_pf[prime]);
+        lcm_mod %= mod;
+    }
 
-    return 0;
+    ll ans = 0;
+    for (ll i = 0; i < n; i++)
+    {
+        ll a_mod = 1;
+        ll num = a[i];
+        ll prime = fc[num];
+        ll prime_cnt = 0;
+        ll prev_prime = 0;
+        while (num > 1)
+        {
+            prime_cnt++;
+            num /= prime;
+            prev_prime = prime;
+            prime = fc[num];
+            if (prev_prime != prime)
+            {
+                a_mod *= pow_mod(prev_prime, prime_cnt);
+                a_mod %= mod;
+                prime_cnt = 0;
+            }
+        }
+        ans += div_mod(lcm_mod, a_mod);
+        ans %= mod;
+    }
+
+    cout << ans << endl;
 }
